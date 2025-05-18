@@ -1,4 +1,5 @@
 import { WebSocket } from "ws";
+import type { Ship } from "../db/games";
 
 export type Message<T> = {
     type: string;
@@ -18,9 +19,10 @@ export type SignInResponse = {
     errorText?: string,
 };
 
-export type Winner = {
-    name: string;
-    wins: number;
+export type AddShipsRequest = {
+    gameId: string;
+    ships: Ship[];
+    indexPlayer: string;
 }
 
 export type UserWebSocket = WebSocket & { userId: number };
@@ -36,5 +38,6 @@ export enum MessageType {
     finish = "finish",
     createRoom = "create_room",
     addShips = "add_ships",
-    randomAttack = "randomAttack"
+    randomAttack = "randomAttack",
+    addUserToRoom = "add_user_to_room"
 }

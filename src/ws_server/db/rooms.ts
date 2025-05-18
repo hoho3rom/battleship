@@ -30,7 +30,7 @@ const update = (id: string, room: Room) => {
     const roomIndex = rooms.findIndex((room) => room.id === id);
 
     if (roomIndex > -1) {
-        rooms.splice(roomIndex, 1, { ...room, id })
+        rooms.splice(roomIndex, 1, { ...room, id });
     }
 }
 

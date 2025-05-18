@@ -1,7 +1,7 @@
 
 import crypto from 'node:crypto';
 
-type Ship = {
+export type Ship = {
     position: { x: number, y: number };
     direction: boolean;
     length: number;
@@ -14,16 +14,32 @@ type Player = {
     ships: Ship[];
 }
 
-type Game = {
+export type Game = {
     id: string;
-    player1: Player;
-    player2: Player;
+    players: Player[];
 }
 
 const games: Game[] = [];
 
-const createGame = (userId: number) => {
-    const id = crypto.randomUUID();
-    const game = { }
+const getById = (id: string) => {
+    return games.find(game => game.id === id);
+}
 
+const createGame = (users: User[]) => {
+    const id = crypto.randomUUID();
+    const players = users.map((user) => ({ 
+        id: crypto.randomUUID(), 
+        userId: user.id, 
+        ships: [] 
+    }));
+    const game = { id, players };
+
+    games.push(game);
+
+    return game;
+}
+
+export const gamesDb = {
+    getById,
+    createGame
 }

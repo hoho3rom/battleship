@@ -1,6 +1,14 @@
 import { usersDb } from "../db/users.js";
-import type { SignInResponse } from "../types/messaging.js";
+import type { SignInRequest, SignInResponse } from "../types/messaging.js";
 import { ensureSignInRequest } from "../utils.js";
+
+const getById = (userId: number) => {
+    return usersDb.getById(userId);
+}
+
+const listByRoomId = (roomId: string) => {
+    return usersDb.listByRoom(roomId);
+}
 
 const getWinners = () => {
     const users = usersDb.list();
@@ -8,23 +16,25 @@ const getWinners = () => {
     return users.map(user => ({ name: user.name, wins: user.wins }));
 }
 
+const update = (id: number, user: User) => {
+    return usersDb.update(id, user);
+}
+
 const updateWinner = (winnerId: number) => {
     const winner = usersDb.getById(winnerId);
     if (!winner) return;
 
     winner.wins += 1;
-    
+
     usersDb.update(winnerId, winner);
 }
 
-const signInUp = (messageData: string): SignInResponse => {
-    const data = JSON.parse(messageData);
-
-    if (!data && !ensureSignInRequest(data)) {
-        return { name: data?.name || 'unknown', index: -1, error: true, errorText: "Invalid request body" };
+const signInUp = (signInRequest: SignInRequest | any): SignInResponse => {
+    if (!signInRequest && !ensureSignInRequest(signInRequest)) {
+        return { name: signInRequest?.name || 'unknown', index: -1, error: true, errorText: "Invalid request body" };
     }
 
-    const { name, password } = data;
+    const { name, password } = signInRequest;
     const existingUser = usersDb.getByNameAndPassword(name, password);
 
     if (!existingUser && usersDb.existsByName(name)) {
@@ -36,8 +46,11 @@ const signInUp = (messageData: string): SignInResponse => {
     return { name: user.name, index: user.id, error: false };
 }
 
-export const usersService ={
+export const usersService = {
+    getById,
+    listByRoomId,
     getWinners,
+    update,
     updateWinner,
     signInUp
 }

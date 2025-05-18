@@ -1,5 +1,6 @@
 import { roomsDb } from "../db/rooms";
 import { usersDb } from "../db/users";
+import { usersService } from "./users";
 
 const getAvailableRooms = () => {
     const availableRooms = roomsDb.listAvailable();
@@ -16,6 +17,9 @@ const createMyRoom = (myId: number) => {
 }
 
 const addMeToRoom = (userId: number, roomId: string) => {
+    const me = usersService.getById(userId);
+    if (me?.roomId === roomId) return;
+
     addUserToRoom(userId, roomId);
     roomsDb.update(roomId, { id: roomId, available: false });
 }
