@@ -9,7 +9,7 @@ const list = () => {
 }
 
 const listByRoom = (roomId: string) => {
-    return users.filter(user => user.roomId === roomId);
+    return users.filter(user => user.roomIds.includes(roomId));
 }
 
 const getByNameAndPassword = (name: string, password: string) => {
@@ -25,7 +25,8 @@ const create = (name: string, password: string): User => {
         id: getNextId(),
         name: name,
         password,
-        wins: 0
+        wins: 0,
+        roomIds: []
     };
 
     users.push(newUser);

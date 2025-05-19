@@ -1,10 +1,9 @@
-import type { Game } from "./db/games";
 import { socketsHub } from "./db/sockets";
 import { gamesService } from "./service/games";
 import { roomsService } from "./service/rooms";
 import { usersService } from "./service/users";
-import { MessageType, UserWebSocket, type AddShipsRequest } from "./types/messaging";
-import { respond } from "./utils";
+import { MessageType, UserWebSocket, type AddShipsRequest, type AttackRequest } from "./types/messaging";
+import { respond as notify } from "./utils";
 import { WebSocket, WebSocketServer } from "ws";
 
 const register = (currentSocket: UserWebSocket, server: WebSocketServer, data: string) => {
@@ -15,7 +14,7 @@ const register = (currentSocket: UserWebSocket, server: WebSocketServer, data: s
         currentSocket.userId = userDTO.index;
     }
 
-    respond(currentSocket, MessageType.reg, userDTO);
+    notify(currentSocket, MessageType.reg, userDTO);
 
     const availableRooms = roomsService.getAvailableRooms();
     notifyAll(server, MessageType.updateRoom, availableRooms);
@@ -25,7 +24,6 @@ const register = (currentSocket: UserWebSocket, server: WebSocketServer, data: s
 }
 
 const createRoom = (currentSocket: UserWebSocket, server: WebSocketServer) => {
-    console.log('meh');
     roomsService.createMyRoom(currentSocket.userId);
 
     const availableRooms = roomsService.getAvailableRooms();
@@ -44,7 +42,7 @@ const addUserToRoom = (currentSocket: UserWebSocket, server: WebSocketServer, da
     if (game) {
         [...game.players.values()].forEach(player => {
             const socket = socketsHub.getByUserId(player.userId);
-            socket && respond(socket, MessageType.createGame, { idGame: game.id, idPlayer: player.id });
+            socket && notify(socket, MessageType.createGame, { idGame: game.id, idPlayer: player.id });
         });
     }
 }
@@ -56,19 +54,49 @@ const addShips = (data: string) => {
     const { gameId } = addShipsRequest;
 
     if (gamesService.isReadyToStart(gameId)) {
-        gamesService.getById(gameId)
-            ?.players
-            .forEach(player => {
-                const socket = socketsHub.getByUserId(player.userId);
-                socket && respond(socket, MessageType.startGame, { ships: player.ships, currentPlayerIndex: player.id });
-            });
+        startGame(gameId);
     }
+}
+
+const startGame = (gameId: string) => {
+    const players = gamesService.getById(gameId)?.players || [];
+
+    players.forEach(player => {
+        const socket = socketsHub.getByUserId(player.userId);
+        if (socket) {
+            notify(socket, MessageType.startGame, { ships: player.ships, currentPlayerIndex: player.id });
+            notify(socket, MessageType.turn, { currentPlayer: players[0].id });
+        }
+    });
+}
+
+const attack = (data: string) => {
+    const attack: AttackRequest = JSON.parse(data);
+
+    const result = gamesService.attack(attack);
+    if (!result) return;
+
+    const { position, status, players, missedCoords, turn } = result;
+
+    players.forEach(player => {
+        const socket = socketsHub.getByUserId(player.userId);
+        if (!socket) return;
+
+        const data = { position, currentPlayer: players[0].id, status }
+        notify(socket, MessageType.attack, data);
+
+        missedCoords?.forEach(position => {
+            notify(socket, MessageType.attack, { position, currentPlayer: players[0].id, status: 'miss' });
+        });
+
+        notify(socket, MessageType.turn, { currentPlayer: turn })
+    });
 }
 
 const notifyAll = (server: WebSocketServer, type: MessageType, data: any) => {
     server.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-            respond(client, type, data);
+            notify(client, type, data);
         }
     })
 }
@@ -85,6 +113,7 @@ export const controller = {
     register,
     createRoom,
     addUserToRoom,
-    addShips
+    addShips,
+    attack,
 }
 

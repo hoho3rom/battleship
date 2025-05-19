@@ -35,6 +35,10 @@ export const startWsServer = () => {
                     controller.addShips(data);
                     break;
                 }
+                case MessageType.attack: {
+                    controller.attack(data);
+                    break;
+                }
             }
         });
 

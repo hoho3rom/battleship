@@ -18,7 +18,7 @@ const createMyRoom = (myId: number) => {
 
 const addMeToRoom = (userId: number, roomId: string) => {
     const me = usersService.getById(userId);
-    if (me?.roomId === roomId) return;
+    if (me?.roomIds.includes(roomId)) return;
 
     addUserToRoom(userId, roomId);
     roomsDb.update(roomId, { id: roomId, available: false });
@@ -27,11 +27,11 @@ const addMeToRoom = (userId: number, roomId: string) => {
 const addUserToRoom = (userId: number, roomId: string) => {
     if (!roomsDb.existsById(roomId)) return;
 
-    const me = usersDb.getById(userId);
-    if (!me) return;
+    const user = usersDb.getById(userId);
+    if (!user) return;
 
-    me.roomId = roomId;
-    usersDb.update(userId, me);
+    user.roomIds.push(roomId);
+    usersDb.update(userId, user);
 }
 
 export const roomsService = {

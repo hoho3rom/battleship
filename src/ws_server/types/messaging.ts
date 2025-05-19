@@ -25,6 +25,19 @@ export type AddShipsRequest = {
     indexPlayer: string;
 }
 
+export type AttackRequest = {
+    gameId: string;
+    x: number;
+    y: number;
+    indexPlayer: string;
+}
+
+export type AttackResponse = {
+    position: { x: number, y: number }
+    currentPlayer: string;
+    status: 'miss' | 'killed' | 'shot';
+}
+
 export type UserWebSocket = WebSocket & { userId: number };
 
 export enum MessageType {

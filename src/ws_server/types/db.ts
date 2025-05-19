@@ -4,6 +4,6 @@ type User = {
     password: string,
     wins: number,
 
-    roomId?: string,
+    roomIds: string[],
 }
 
