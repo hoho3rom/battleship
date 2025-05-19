@@ -36,7 +36,7 @@ export const startWsServer = () => {
                     break;
                 }
                 case MessageType.attack: {
-                    controller.attack(data);
+                    controller.attack(websocketServer, data);
                     break;
                 }
             }

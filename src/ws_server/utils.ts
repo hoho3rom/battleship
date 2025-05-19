@@ -1,5 +1,5 @@
-import type { Coord, Player, Ship, ShipCoords } from "./db/games.js";
-import type { AttackRequest, AttackResponse, Message, SignInRequest } from "./types/messaging.js";
+import type { Ship, ShipCoords } from "./db/games.js";
+import type { Message, SignInRequest } from "./types/messaging.js";
 import { WebSocket } from "ws";
 
 export const respond = (ws: WebSocket, type: string, data: any) => {
@@ -38,7 +38,6 @@ export const convertShips = (ships: Ship[]): ShipCoords[] => {
                 ? { x, y: i, shot: false }
                 : { x: i, y, shot: false }
 
-            console.log(coord);
             coords.push(coord);
         }
         return coords;
@@ -55,10 +54,10 @@ export const getMissedCoords = (coords: ShipCoords) => {
 
     for (let x = minX; x <= maxX; x++) {
         for (let y = minY; y <= maxY; y++) {
-            if (coords.some(coord => (coord.x === x && coord.y === y) || outOfField(x) || outOfField(y))) {
-                break;
+            const shipOrOut = coords.some(coord => (coord.x === x && coord.y === y)) || outOfField(x) || outOfField(y);
+            if (!shipOrOut) {
+                missedCoords.push({x, y})
             }
-            missedCoords.push({x, y})
         }
     }
 
@@ -66,12 +65,3 @@ export const getMissedCoords = (coords: ShipCoords) => {
 }
 
 const outOfField = (coord: number) => coord < 0 || coord > 9;
-
-// export const getAttackResponse = (position: Coord, player: Player): AttackResponse => {
-//     return {
-//         position,
-//         currentPlayer: player.id,
-//         status
-//     }
-
-// }

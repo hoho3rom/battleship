@@ -1,3 +1,4 @@
+import type { Player } from "./db/games";
 import { socketsHub } from "./db/sockets";
 import { gamesService } from "./service/games";
 import { roomsService } from "./service/rooms";
@@ -70,7 +71,7 @@ const startGame = (gameId: string) => {
     });
 }
 
-const attack = (data: string) => {
+const attack = (server: WebSocketServer, data: string) => {
     const attack: AttackRequest = JSON.parse(data);
 
     const result = gamesService.attack(attack);
@@ -89,8 +90,27 @@ const attack = (data: string) => {
             notify(socket, MessageType.attack, { position, currentPlayer: players[0].id, status: 'miss' });
         });
 
-        notify(socket, MessageType.turn, { currentPlayer: turn })
+        notify(socket, MessageType.turn, { currentPlayer: turn });
     });
+
+    const winner = gamesService.getGameWinner(attack.gameId);
+    if (winner) {
+        finishGame(server, players, winner);
+    }
+}
+
+const finishGame = (server: WebSocketServer, players: Player[], winner: Player) => {
+    usersService.updateWinner(winner.userId);
+
+    players.forEach(player => {
+        const socket = socketsHub.getByUserId(player.userId);
+        if (!socket) return;
+
+        notify(socket, MessageType.finish, { winPlayer: winner.id });
+    });
+
+    const winners = usersService.getWinners();
+    notifyAll(server, MessageType.updateWinners, winners);
 }
 
 const notifyAll = (server: WebSocketServer, type: MessageType, data: any) => {
@@ -100,14 +120,6 @@ const notifyAll = (server: WebSocketServer, type: MessageType, data: any) => {
         }
     })
 }
-
-// const notifyUsers = (userIds: number[], type: MessageType, data: any) => {
-//     userIds.forEach(userId => {
-//         const socket = socketsHub.getByUserId(userId);
-//         socket && respond(socket, type, data);
-//     })
-// }
-
 
 export const controller = {
     register,
