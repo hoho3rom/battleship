@@ -1,0 +1,41 @@
+import { roomsDb } from "../db/rooms";
+import { usersDb } from "../db/users";
+import { usersService } from "./users";
+
+const getAvailableRooms = () => {
+    const availableRooms = roomsDb.listAvailable();
+
+    return availableRooms.map((room) => ({
+        roomId: room.id,
+        roomUsers: usersDb.listByRoom(room.id).map(user => ({ name: user.name, index: user.id }))
+    }));
+}
+
+const createMyRoom = (myId: number) => {
+    const newRoom = roomsDb.create();
+    addUserToRoom(myId, newRoom.id);
+}
+
+const addMeToRoom = (userId: number, roomId: string) => {
+    const me = usersService.getById(userId);
+    if (me?.roomIds.includes(roomId)) return;
+
+    addUserToRoom(userId, roomId);
+    roomsDb.update(roomId, { id: roomId, available: false });
+}
+
+const addUserToRoom = (userId: number, roomId: string) => {
+    if (!roomsDb.existsById(roomId)) return;
+
+    const user = usersDb.getById(userId);
+    if (!user) return;
+
+    user.roomIds.push(roomId);
+    usersDb.update(userId, user);
+}
+
+export const roomsService = {
+    getAvailableRooms,
+    createMyRoom,
+    addMeToRoom
+}

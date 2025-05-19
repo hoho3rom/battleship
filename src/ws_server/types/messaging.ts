@@ -1,0 +1,56 @@
+import { WebSocket } from "ws";
+import type { Ship } from "../db/games";
+
+export type Message<T> = {
+    type: string;
+    data: T;
+    id: 0;
+};
+
+export type SignInRequest = {
+    name: string;
+    password: string;
+};
+
+export type SignInResponse = {
+    name: string,
+    index: number,
+    error: boolean,
+    errorText?: string,
+};
+
+export type AddShipsRequest = {
+    gameId: string;
+    ships: Ship[];
+    indexPlayer: string;
+}
+
+export type AttackRequest = {
+    gameId: string;
+    x: number;
+    y: number;
+    indexPlayer: string;
+}
+
+export type AttackResponse = {
+    position: { x: number, y: number }
+    currentPlayer: string;
+    status: 'miss' | 'killed' | 'shot';
+}
+
+export type UserWebSocket = WebSocket & { userId: number };
+
+export enum MessageType {
+    reg = "reg",
+    updateRoom = "update_room",
+    updateWinners = "update_winners",
+    createGame = "create_game",
+    startGame = "start_game",
+    turn = "turn",
+    attack = "attack",
+    finish = "finish",
+    createRoom = "create_room",
+    addShips = "add_ships",
+    randomAttack = "randomAttack",
+    addUserToRoom = "add_user_to_room"
+}
