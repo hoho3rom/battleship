@@ -1,9 +1,8 @@
 import { WebSocketServer } from "ws";
-import {roomsService}  from "./service/rooms.js";
 import { MessageType, type UserWebSocket } from "./types/messaging.js";
-import { respond } from "./utils.js";
 import { controller } from "./controller.js";
 import { socketsHub } from "./db/sockets.js";
+import process from "node:process";
 
 export const startWsServer = () => {
     const websocketServer = new WebSocketServer({ port: 3000 }, () => {
@@ -46,4 +45,12 @@ export const startWsServer = () => {
             console.log('Client disconnected');
         });
     });
+
+    process.on('SIGINT', () => {
+        console.log(`\nClose connections`);
+        socketsHub.list().forEach(socket => {
+            socket.close(1000, 'Process exit');
+        })  
+        process.exit(0)
+    })
 }

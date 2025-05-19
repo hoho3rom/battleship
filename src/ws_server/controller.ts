@@ -1,4 +1,4 @@
-import type { Player } from "./db/games";
+import { type Player } from "./db/games";
 import { socketsHub } from "./db/sockets";
 import { gamesService } from "./service/games";
 import { roomsService } from "./service/rooms";
@@ -126,6 +126,6 @@ export const controller = {
     createRoom,
     addUserToRoom,
     addShips,
-    attack,
+    attack
 }
 

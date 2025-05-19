@@ -10,7 +10,12 @@ const getByUserId = (userId: number) => {
     return sockets.find(socket => socket.userId === userId);
 }
 
+const list = () => {
+    return [...sockets];
+}
+
 export const socketsHub = {
     add,
     getByUserId,
+    list,
 }
